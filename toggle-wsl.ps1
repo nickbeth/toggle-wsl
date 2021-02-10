@@ -19,11 +19,11 @@ function Elevate
 {
     if ($env:WT_SESSION)
     {
-        Start-Process -Verb RunAs wt "powershell C:\DEV\GitHub\toggle-wsl\toggle-wsl.ps1"
+        Start-Process -Verb RunAs wt "powershell $PSScriptRoot\toggle-wsl.ps1"
     }
     else
     {
-        Start-Process -Verb RunAs powershell C:\DEV\GitHub\toggle-wsl\toggle-wsl.ps1
+        Start-Process -Verb RunAs powershell $PSScriptRoot\toggle-wsl.ps1
     }
 }
 
