@@ -53,7 +53,7 @@ function DeleteSavedState() {
 
 Write-Host "     ╭──────────────────╮
 ---=/│    TOGGLE-WSL    │\=---
----=\│       v1.0       │/=---
+---=\│       v1.1       │/=---
      ╰──────────────────╯`n"
 
 if(-not (Test-Administrator)) {
