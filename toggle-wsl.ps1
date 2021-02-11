@@ -72,6 +72,8 @@ Double reboot script: $startupPath"
 
 if ($file.Exists -and $file.Length -gt 0) {
     # case: saved state found -> all features are likely disabled, restore from saved state
+    Write-Host "=> Script is in RESTORE mode."
+
     [Bool] $doubleRestart = $false
     Write-Host "`nSaved state found! Loading features state."
     $savestate = LoadState
@@ -111,6 +113,7 @@ else {
     # case: saved state not found -> find enabled features, disable them and save state
     $features = @()
     $exit = $true
+    Write-Host "=> Script is in SAVE mode."
 
     foreach ($feature in $featureList) {
         $f = New-Object PSObject -Property @{
