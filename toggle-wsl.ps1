@@ -79,11 +79,12 @@ else
 
     Write-Host "Settings
 ‾‾‾‾‾‾‾‾
-Saved State Path: $savedStatePath
-Startup Batch Path: $startupPath"
+Saved state: $savedStatePath
+Double reboot script: $startupPath"
 
     if ($file.Exists -and $file.Length -gt 0) # Save state found. All features are likely disabled, restore from saved state
     {
+        [Bool] $doubleRestart = $false
         Write-Host "`nSaved state found! Loading features state."
         $savestate = LoadState
         Write-Host "`nFollowing features will be enabled:"
@@ -92,11 +93,13 @@ Startup Batch Path: $startupPath"
             # Check if double restart is needed
             if ($s.state)
             {
-                Write-Host "-> $(GetDisplayName($s.name))"
+                [String] $m = "-> $(GetDisplayName($s.name))"
                 if ($s.name -eq "Microsoft-Windows-Subsystem-Linux")
                 {
-                    Set-Content -Path $startupPath -Value "shutdown /t 5 /r /c `"Your PC will reboot in 5 seconds to apply changes. This is the second reboot.`"`n(goto) 2>nul & del `"%~f0`""
+                    $doubleRestart = $true
+                    $m += " (2 rebooots needed)"
                 }
+                Write-Host $m
             }
         }
 
@@ -108,6 +111,12 @@ Startup Batch Path: $startupPath"
             {
                 Enable-WindowsOptionalFeature -Online -FeatureName $feature.name -NoRestart 3>&1 | Out-Null
             }
+        }
+        
+        if ($doubleRestart)
+        {
+            Set-Content -Path $startupPath -Value "shutdown /t 5 /r /c `"Your PC will reboot in 5 seconds to apply changes. This is the second reboot.`"`n(goto) 2>nul & del `"%~f0`""
+            Write-Host "`nDouble reboot script created."
         }
 
         Write-Host "`nDeleting saved state..."
