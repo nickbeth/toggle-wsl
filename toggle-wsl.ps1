@@ -1,8 +1,9 @@
 ﻿<#  Toggle-WSL
 
-    A PowerShell 5 script to automate toggling WSL and Hyper-V related virtualization features on Windows 10 Pro.
+    A PowerShell 5 script to automate toggling WSL and Hyper-V related virtualization features on Windows 10/11 Pro.
 
-    Made by https://github.com/sspacelynx
+    Made by https://github.com/lynxnb
+    Source: https://github.com/lynxnb/toggle-wsl
 #>
 
 [String[]] $featureList = "Microsoft-Windows-Subsystem-Linux", "VirtualMachinePlatform", "Microsoft-Hyper-V-All", "HypervisorPlatform", "Containers-DisposableClientVM"
@@ -10,7 +11,6 @@
 [String] $startupPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\toggle-wsl.cmd"
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding
 $host.UI.RawUI.WindowTitle = "Toggle-WSL"
-
 
 <# Class / Functions Definitions #>
 
@@ -24,6 +24,7 @@ function Elevate {
 }
 
 function Test-Administrator {
+    Write-Host "Checking for administrator privileges..."
     [Security.Principal.WindowsPrincipal] $user = [Security.Principal.WindowsIdentity]::GetCurrent();
     return $user.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator);
 }
@@ -37,14 +38,17 @@ function GetDisplayName([String] $feature) {
 }
 
 function SaveState($obj) {
+    Write-Host "`nSaving state..."
     $obj | ConvertTo-Json | Out-File $savedStatePath
 }
 
 function LoadState() {
+    Write-Host "`nLoading saved state..."
     return Get-Content -Path $savedStatePath -Raw | ConvertFrom-Json
 }
 
 function DeleteSavedState() {
+    Write-Host "`nDeleting saved state..."
     Remove-Item -Path $savedStatePath
 }
 
@@ -67,15 +71,15 @@ if(-not (Test-Administrator)) {
 
 Write-Host "Settings
 ‾‾‾‾‾‾‾‾
-Saved state: $savedStatePath
+Saved state path: $savedStatePath
 Double reboot script: $startupPath"
 
 if ($file.Exists -and $file.Length -gt 0) {
-    # case: saved state found -> all features are likely disabled, restore from saved state
-    Write-Host "=> Script is in RESTORE mode."
+    # Case: saved state found -> all features are likely disabled, restore from saved state
+    Write-Host "`nSaved state found!"
+    Write-Host "=> Script is in RESTORE mode"
 
-    [Bool] $doubleRestart = $false
-    Write-Host "`nSaved state found! Loading features state."
+    $doubleRestart = $false
     $savestate = LoadState
 
     Write-Host "`nFollowing features will be enabled:"
@@ -83,7 +87,7 @@ if ($file.Exists -and $file.Length -gt 0) {
         if ($s.state) {
             [String] $m = "-> $(GetDisplayName($s.name))"
 
-            # check if double restart is needed
+            # Check if double restart is needed
             if ($s.name -eq "Microsoft-Windows-Subsystem-Linux") {
                 $doubleRestart = $true
                 $m += " (2 reboots needed)"
@@ -100,20 +104,21 @@ if ($file.Exists -and $file.Length -gt 0) {
         }
     }
 
+    $shutdownMessage = "Your PC will reboot in 5 seconds to apply changes."
     if ($doubleRestart) {
+        $shutdownMessage = "Your PC will reboot TWICE in 5 seconds to apply changes. This is the first reboot, please wait for the second reboot to be completed before using your PC."
         Set-Content -Path $startupPath -Value "shutdown /t 5 /r /c `"Your PC will reboot in 5 seconds to apply changes. This is the second reboot.`"`n(goto) 2>nul & del `"%~f0`""
-        Write-Host "`nDouble reboot script created."
+        Write-Host "`nDouble reboot script created"
     }
 
-    Write-Host "`nDeleting saved state..."
     DeleteSavedState
-    shutdown /t 5 /r /c "Your PC will reboot TWICE in 5 seconds to apply changes. This is the first reboot, please wait for the second reboot to be completed before using your PC."
+    shutdown /t 5 /r /c $shutdownMessage
 }
 else {
-    # case: saved state not found -> find enabled features, disable them and save state
+    # Case: saved state not found -> find enabled features, disable them and save state
     $features = @()
     $exit = $true
-    Write-Host "=> Script is in SAVE mode."
+    Write-Host "=> Script is in SAVE mode"
 
     foreach ($feature in $featureList) {
         $f = New-Object PSObject -Property @{
@@ -121,7 +126,7 @@ else {
             state = GetfState($feature)
         }
 
-        # If all features are disabled, set exit flag
+        # If at least one feature is enabled, unset the exit flag
         if ($f.state) {
             if ($exit) {
                 $exit = $false
@@ -134,7 +139,7 @@ else {
     }
 
     if ($exit) {
-        Write-Host "`nERROR! All features are disabled and no saved state was found, the script cannot continue. Aborting."
+        Write-Host "`nAll features are disabled and no saved state was found, nothing to do. Aborting."
         Read-Host -Prompt "Press enter to quit..." | Out-Null
         exit 0
     }
@@ -147,10 +152,9 @@ else {
         }
     }
 
-    Write-Host "`nSaving state..."
     SaveState($features)
     shutdown /t 5 /r /c "Your PC will reboot in 5 seconds to apply changes."
 }
 
-Write-Host "`nDone! Rebooting."
+Write-Host "`nDone! Rebooting"
 Start-Sleep -s 3
