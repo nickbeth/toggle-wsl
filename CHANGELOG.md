@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Show which features require double reboot, if any.
 - Show script mode: possible values are SAVE and RESTORE.
 
-### Changes
+### Changed
 - Switch code formatting to K&R Stroustrup brackets style.
 - Simplified `Settings` section.
 - Bugfix: double reboot script was created before receiving user confirmation.

@@ -1,5 +1,5 @@
 # Toggle-WSL
-A PowerShell 5 script to automate toggling WSL and Hyper-V related virtualization features on Windows 10 Pro.
+A PowerShell 5 script to automate toggling WSL and Hyper-V related virtualization features on Windows 10/11 Pro.
 
 ## Usage
 ```
@@ -34,3 +34,9 @@ NOTE: if WSL is to be enabled, two reboots are required for it to work properly.
 - Windows Sandbox
 
 Feedback is welcome! If you find any other feature you believe should be disabled but the script does not, please open an issue and I'll gladly add it to the list.
+
+## Changelog
+See [CHANGELOG.md](CHANGELOG.md).
+
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for more details
